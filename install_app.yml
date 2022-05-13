@@ -1,0 +1,63 @@
+- name: install webserver with docker on ec2 instance
+  hosts: all
+
+  tasks:
+  - name: update yum
+    become: yes
+    yum:
+      name: yum
+      state: latest
+  
+  - name: install docker
+    become: yes
+    yum:
+      name: docker
+      state: present
+  
+  - name: install python3
+    become: yes
+    yum:
+      name: python3
+      state: present
+  
+  - name: install python3-pip
+    become: yes
+    yum:
+      name: python3-pip
+      state: present
+
+  - name: upgrade pip
+    become: yes
+    pip:
+      name: pip
+      executable: pip3
+      state: latest
+
+  - name: install python docker library
+    block:
+      - name: install python docker library with ansible pip
+        become: yes
+        pip:
+          executable: pip3
+          name: docker
+    rescue:
+      - name: install python docker library with command
+        become: yes
+        command: pip install docker
+
+  - name: start and enable docker
+    become: yes
+    ansible.builtin.systemd:
+      name: docker.service
+      state: started
+      enabled: yes
+
+  - name: run docker image
+    become: yes
+    vars:
+      ansible_python_interpreter: /usr/bin/python3
+    docker_container:
+      name: cms-react
+      image: ausarius/cms-react
+      ports:
+        - "80:3000"
