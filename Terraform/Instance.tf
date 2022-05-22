@@ -21,27 +21,18 @@ data "aws_ami" "aws-linux" {
 }
 
 # Instance
-
-resource "aws_instance" "Servers" {
-  count = var.instance_count
+resource "aws_instance" "Controller" {
   ami = data.aws_ami.aws-linux.id
   instance_type = var.instance_type
   key_name = var.key_name
   vpc_security_group_ids = [aws_security_group.allow_ssh_http_https.id]
-  subnet_id = module.vpc.public_subnets[(count.index)]
+  subnet_id = module.vpc.public_subnets[0]
+    tags = merge(local.common_tags, { Name = "Controller1"})
   connection {
       type = "ssh"
       host = self.public_ip
       user = "ec2-user"
       private_key = file(var.private_key_path)
-  }
-  provisioner "remote-exec" {
-      inline = [
-          "sudo echo 'remote ok'",
-          "sudo yum install python -y",
-          "sudo pip install ansible",
-          "echo 'testAnsible ansible_user=ec2-user ansible_host = ${aws_instance.Servers[0].public_ip} ansible_ssh_private_key_file = vockey.pem '| sudo tee host"
-      ]
   }
   provisioner "file" {
     source = "../install_app.yml"
@@ -59,5 +50,24 @@ resource "aws_instance" "Servers" {
     source = "../servers"
     destination = "servers"
   }
-  
+    provisioner "remote-exec" {
+      inline = [
+          format("echo '%s' | sudo tee hosts", join("",formatlist("testAnsible ansible_user=ec2-user ansible_host=${aws_instance.Controller.private_ip} ansible_ssh_private_key_file=vockey.pem \n%s", [for i in range(var.instance_count) : "testAnsible${i} ansible_user=ec2-user ansible_host=${aws_instance.Servers[i].public_ip} ansible_ssh_private_key_file=vockey.pem \n"]))),
+          "sudo yum install python -y",
+          "sudo chmod 600 vockey.pem",
+          "sudo pip install ansible",
+          "ansible-playbook install_app.yml",
+          
+      ]
+  }
+}
+
+resource "aws_instance" "Servers" {
+  count = var.instance_count
+  ami = data.aws_ami.aws-linux.id
+  instance_type = var.instance_type
+  key_name = var.key_name
+  vpc_security_group_ids = [aws_security_group.allow_ssh_http_https.id]
+  subnet_id = module.vpc.public_subnets[(count.index + 1)]
+  tags = merge(local.common_tags, { Name = "Server-${count.index}"})
 }
