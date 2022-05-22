@@ -61,11 +61,16 @@ variable "instance_type" {
 variable "instance_count"{
     type = number
     description = "number of instances to create"
-    default = 1
+    default = 3
 }
 
 variable "project_name" {
     type = string
     description = "Name for common tags"
     default = "npa2022project"
+}
+
+variable "az_count" {
+  type = number
+  default = 2
 }

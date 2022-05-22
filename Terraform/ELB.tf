@@ -35,9 +35,15 @@ resource "aws_lb_listener" "lbListener" {
   tags = merge(local.common_tags, { Name = "LBlistener"})
 }
 
-resource "aws_lb_target_group_attachment" "TGattach" {
+resource "aws_lb_target_group_attachment" "Serversattach" {
     count = var.instance_count
     target_group_arn = aws_lb_target_group.tgp.arn
     target_id = aws_instance.Servers[count.index].id 
+    port = 80
+}
+
+resource "aws_lb_target_group_attachment" "Controllerattach" {
+    target_group_arn = aws_lb_target_group.tgp.arn
+    target_id = aws_instance.Controller.id
     port = 80
 }

@@ -68,6 +68,6 @@ resource "aws_instance" "Servers" {
   instance_type = var.instance_type
   key_name = var.key_name
   vpc_security_group_ids = [aws_security_group.allow_ssh_http_https.id]
-  subnet_id = module.vpc.public_subnets[(count.index + 1)]
+  subnet_id = module.vpc.public_subnets[(count.index % 2 == 0 ? 1 : 0)]
   tags = merge(local.common_tags, { Name = "Server-${count.index}"})
 }
