@@ -27,7 +27,7 @@ resource "aws_instance" "Controller" {
   key_name = var.key_name
   vpc_security_group_ids = [aws_security_group.allow_ssh_http_https.id]
   subnet_id = module.vpc.public_subnets[0]
-    tags = merge(local.common_tags, { Name = "Controller1"})
+  tags = merge(local.common_tags, { Name = "Controller"})
   connection {
       type = "ssh"
       host = self.public_ip
@@ -52,7 +52,7 @@ resource "aws_instance" "Controller" {
   }
     provisioner "remote-exec" {
       inline = [
-          format("echo '%s' | sudo tee hosts", join("",formatlist("testAnsible ansible_user=ec2-user ansible_host=${aws_instance.Controller.private_ip} ansible_ssh_private_key_file=vockey.pem \n%s", [for i in range(var.instance_count) : "testAnsible${i} ansible_user=ec2-user ansible_host=${aws_instance.Servers[i].public_ip} ansible_ssh_private_key_file=vockey.pem \n"]))),
+          format("echo '%s' | sudo tee hosts", join("",formatlist("Controller ansible_user=ec2-user ansible_host=${aws_instance.Controller.private_ip} ansible_ssh_private_key_file=vockey.pem \n%s", [for i in range(var.instance_count) : "Servers-${i} ansible_user=ec2-user ansible_host=${aws_instance.Servers[i].public_ip} ansible_ssh_private_key_file=vockey.pem \n"]))),
           "sudo yum install python -y",
           "sudo chmod 600 vockey.pem",
           "sudo python3 -m pip install ansible",
