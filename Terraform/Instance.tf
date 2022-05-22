@@ -6,7 +6,7 @@ data "aws_ami" "aws-linux" {
 
   filter {
     name   = "name"
-    values = ["amzn-ami-hvm*"]
+    values = ["amzn2-ami-kernel*"]
   }
 
   filter {
@@ -55,7 +55,7 @@ resource "aws_instance" "Controller" {
           format("echo '%s' | sudo tee hosts", join("",formatlist("testAnsible ansible_user=ec2-user ansible_host=${aws_instance.Controller.private_ip} ansible_ssh_private_key_file=vockey.pem \n%s", [for i in range(var.instance_count) : "testAnsible${i} ansible_user=ec2-user ansible_host=${aws_instance.Servers[i].public_ip} ansible_ssh_private_key_file=vockey.pem \n"]))),
           "sudo yum install python -y",
           "sudo chmod 600 vockey.pem",
-          "sudo pip install ansible",
+          "sudo python3 -m pip install ansible",
           "ansible-playbook install_app.yml",
           
       ]

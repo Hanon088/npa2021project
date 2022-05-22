@@ -17,19 +17,17 @@
   - name: install python3
     become: yes
     yum:
-      name: python38
+      name: python3
       state: present
   
   - name: install python3-pip
     become: yes
     yum:
-      name: python38-pip
+      name: python3-pip
       state: present
 
   - name: upgrade pip
     become: yes
-    vars:
-      ansible_python_interpreter: /usr/bin/python3
     pip:
       name: pip
       executable: pip3
